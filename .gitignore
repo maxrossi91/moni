@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+
+# Folders
+build/*
+debug/*
+data/*
+!data/yeast.fasta
