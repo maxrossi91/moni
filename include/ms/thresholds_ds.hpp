@@ -418,12 +418,10 @@ public:
 
             long long off = 0;
 
+            uint8_t c = bwt->head_of(i);
             if (threshold > 0)
-            {
-                uint8_t c = bwt->head_of(i);
                 thrs_per_letter_bv[c].push_back(threshold);
-                thrs_per_letter_bv_i[c] = n;
-            }
+            thrs_per_letter_bv_i[c] = n;
 
         }
 
