@@ -27,14 +27,27 @@ used internally by the algorithm.
 
 Report bugs to Massimiliano Rossi (rossi.m@ufl.edu)
 """
+install = @USE_INSTALL_PATH@
 
 dirname                 = os.path.dirname(os.path.abspath(__file__))
 
-bigbwt_dirname          = os.path.join(dirname, "_deps/bigbwt-build")
-bigrepair_dirname       = os.path.join(dirname, "_deps/bigrepair-src")
-thresholds_dirname      = os.path.join(dirname, "_deps/pfp_thresholds-build/test/src")
-compress_dirname        = os.path.join(dirname, "src")
-shaped_slp_dirname      = os.path.join(dirname, "_deps/shaped_slp-build")
+bigbwt_dirname          = dirname
+bigrepair_dirname       = dirname
+thresholds_dirname      = dirname
+compress_dirname        = dirname
+shaped_slp_dirname      = dirname
+repair_dirname          = dirname
+largeb_repair_dirname   = dirname
+
+if not install:
+
+  bigbwt_dirname        = os.path.join(dirname, "_deps/bigbwt-build")
+  bigrepair_dirname     = os.path.join(dirname, "_deps/bigrepair-src")
+  thresholds_dirname    = os.path.join(dirname, "_deps/pfp_thresholds-build/test/src")
+  compress_dirname      = os.path.join(dirname, "src")
+  shaped_slp_dirname    = os.path.join(dirname, "_deps/shaped_slp-build")
+  repair_dirname        = os.path.join(bigrepair_dirname, "repair")
+  largeb_repair_dirname = os.path.join(bigrepair_dirname, "largeb_repair")
 
 parse_exe               = os.path.join(bigbwt_dirname, "pscan.x")
 parse_fasta_exe         = os.path.join(bigbwt_dirname, "newscan.x")
@@ -54,12 +67,12 @@ rlebwt_ms_exe           = os.path.join(compress_dirname, "rlebwt_ms_build")
 
 compress_exe            = os.path.join(compress_dirname, "compress_dictionary")
 
-repair_exe              = os.path.join(bigrepair_dirname,"repair/irepair")
-largerepair_exe         = os.path.join(bigrepair_dirname,"largeb_repair/irepair")
+repair_exe              = os.path.join(repair_dirname,"irepair")
+largerepair_exe         = os.path.join(largeb_repair_dirname,"largeb_irepair")
 # despair for byte symbols 
-despair_exe             = os.path.join(bigrepair_dirname,"repair/despair")
+despair_exe             = os.path.join(repair_dirname,"despair")
 # despair for int32 symbols 
-integer_despair_exe     = os.path.join(bigrepair_dirname,"repair/idespair")
+integer_despair_exe     = os.path.join(repair_dirname,"idespair")
 # preprocess dict into a sequence of int32 representing both chars and distinct EOS 
 preprocess_exe          = os.path.join(bigrepair_dirname,"procdic")
 integer_preprocess_exe  = os.path.join(bigrepair_dirname,"iprocdic")

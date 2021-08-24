@@ -71,6 +71,13 @@ usage: moni extend [-h] -i INDEX -p PATTERN [-o OUTPUT] [-t THREADS]
 ```
 
 # Example
+### Install prerequisite packages
+
+```console
+apt-get update
+apt-get install -y build-essential cmake git python3 zlib1g-dev
+```
+
 ### Download
 
 ```console
@@ -81,9 +88,17 @@ git clone https://github.com/maxrossi91/moni
 
 ```console
 mkdir build
-cd build; cmake ..
+cd build
+cmake ..
 make
 ```
+### Install
+
+```console
+make install
+```
+
+This command will install the binaries to the default install location (e.g., `/usr/local/bin` for Ubuntu users). If the user wants the binary in some other custom location, this can be done using `cmake -DCMAKE_INSTALL_PERFIX=<dest> ..` instead of `cmake ..` in the compile sequence of commands, where `<dest>` is the preferred destination directory.
 
 ### Run
 

@@ -8,6 +8,7 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
 endif()
 
+message(STATUS "Install directory: ${CMAKE_INSTALL_PREFIX}")
 # About this project
 # ------------------------------------------------------------------------------
 project(moni)
@@ -18,8 +19,6 @@ SET(VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
 
 # Set environment
 # ------------------------------------------------------------------------------
-set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/install)
-
 
 find_package(Git)
 if(GIT_FOUND)
@@ -53,4 +52,17 @@ endif()
 add_subdirectory(src)
 add_subdirectory(utils)
 
-configure_file(${PROJECT_SOURCE_DIR}/pipeline/moni ${PROJECT_BINARY_DIR}/moni)
+# Configure pipeline for build folder
+set(USE_INSTALL_PATH False)
+configure_file(${PROJECT_SOURCE_DIR}/pipeline/moni.in ${PROJECT_BINARY_DIR}/moni @ONLY)
+
+# Configure pipeline for install folder
+set(USE_INSTALL_PATH True)
+configure_file(${PROJECT_SOURCE_DIR}/pipeline/moni.in ${PROJECT_BINARY_DIR}/moni.install @ONLY)
+
+
+install(TARGETS ms rlebwt_ms_build extend_ksw2 compress_dictionary TYPE RUNTIME)
+install(TARGETS SlpEncBuild pfp_thresholds pfp_thresholds64 TYPE RUNTIME)
+install(PROGRAMS ${PROJECT_BINARY_DIR}/moni.install RENAME moni TYPE BIN)
+# install(TARGETS ms rlebwt_ms_build extend_ksw2 DESTINATION bin)
+# install(PROGRAMS ${PROJECT_SOURCE_DIR}/pipeline/moni DESTINATION bin)

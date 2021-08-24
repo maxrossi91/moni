@@ -114,7 +114,7 @@ FetchContent_GetProperties(r-index)
 if(NOT r-index_POPULATED)
   FetchContent_Populate(r-index)
 
-  add_subdirectory(${r-index_SOURCE_DIR} ${r-index_BINARY_DIR} )#EXCLUDE_FROM_ALL)
+  add_subdirectory(${r-index_SOURCE_DIR} ${r-index_BINARY_DIR} EXCLUDE_FROM_ALL)
   add_library(ri INTERFACE)
   target_link_libraries(ri INTERFACE klib z)
   target_include_directories(ri INTERFACE ${r-index_SOURCE_DIR}/internal)
@@ -137,20 +137,22 @@ endif()
 ## Add bigrepair
 FetchContent_Declare(
   bigrepair
-  GIT_REPOSITORY https://gitlab.com/manzai/bigrepair.git
+  GIT_REPOSITORY https://gitlab.com/maxrossi91/bigrepair.git
+  # GIT_REPOSITORY https://gitlab.com/manzai/bigrepair.git
   )
   
 FetchContent_GetProperties(bigrepair)
 if(NOT bigrepair_POPULATED)
+  set(DISABLE_PFP ON CACHE BOOL "Build bigrepair without the PFP")
   FetchContent_Populate(bigrepair)
-  # add_subdirectory(${bigrepair_SOURCE_DIR} ${bigrepair_BINARY_DIR})
+  add_subdirectory(${bigrepair_SOURCE_DIR} ${bigrepair_BINARY_DIR})
 
-  execute_process(COMMAND make
-        RESULT_VARIABLE result
-        WORKING_DIRECTORY ${bigrepair_SOURCE_DIR} )
-  if(result)
-      message(FATAL_ERROR "CMake step for bigrepair failed: ${result}")
-  endif()
+  # execute_process(COMMAND make
+  #       RESULT_VARIABLE result
+  #       WORKING_DIRECTORY ${bigrepair_SOURCE_DIR} )
+  # if(result)
+  #     message(FATAL_ERROR "CMake step for bigrepair failed: ${result}")
+  # endif()
   
 endif()
 
