@@ -476,7 +476,7 @@ size_t st_extend(extender_t *extender, std::string pattern_filename, std::string
     gzclose(fp);
     fclose(sam_fd);
 
-    sleep(5);
+    // sleep(5);
 
     return n_extended_reads;
 }
