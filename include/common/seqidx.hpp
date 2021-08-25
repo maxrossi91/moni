@@ -122,7 +122,7 @@ public:
      */
     inline std::string operator[](const size_t pos)
     {
-        return names[rank1(pos)-1];
+        return names[rank1(pos + 1)-1]; // pos+1 becausethe rank counts the 1s before
     }
 
     /**
@@ -135,7 +135,7 @@ public:
      */
     inline bool valid(size_t pos, size_t len)
     {
-        return (pos + len <= select1(rank1(pos)+1));
+        return (pos + len <= select1(rank1(pos + 1)+1)); // pos+1 becausethe rank counts the 1s before
     }
 
     /**
