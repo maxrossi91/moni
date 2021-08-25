@@ -64,6 +64,7 @@ pfp_thresholds          = os.path.join(thresholds_dirname, "pfp_thresholds")
 pfp_thresholds64        = os.path.join(thresholds_dirname, "pfp_thresholds64")
 
 rlebwt_ms_exe           = os.path.join(compress_dirname, "rlebwt_ms_build")
+seqidx_exe           = os.path.join(compress_dirname, "build_seqidx")
 
 compress_exe            = os.path.join(compress_dirname, "compress_dictionary")
 
@@ -456,6 +457,15 @@ def build(args):
       print("==== Done: Parsing output xz-compressed as requested", flush=True)
       return
 
+
+    start = time.time()
+    command = "{exe} {file}".format(
+            exe=os.path.join(args.exe_dir, seqidx_exe),
+            file=args.reference)
+    print("==== Build fasta index. Command:", command, flush=True)
+    if(execute_command(command, logfile, logfile_name) != True):
+      return
+    print("Elapsed time: {0:.4f}".format(time.time()-start), flush=True)
     # ----------- computation of the PFP data structures
 
     pf_thresholds_thread = PFPthresholds(name="{}".format(args.reference), args=args, counter=1)

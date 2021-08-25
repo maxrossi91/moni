@@ -287,6 +287,30 @@ void write_file(const char *filename, std::vector<T> &ptr)
 //********** begin my serialize edit from sdsl ********************
 // Those are wrapper around most of the serialization functions of sdsl
 
+
+template <class T, typename size_type>
+uint64_t
+my_serialize_array(const T* p, const size_type size, std::ostream &out, typename std::enable_if<std::is_fundamental<T>::value>::type * = 0)
+{
+  size_t written_bytes = 0;
+  if (size > 0)
+  {
+
+    size_type idx = 0;
+    while (idx + sdsl::conf::SDSL_BLOCK_SIZE < (size))
+    {
+      out.write((char *)p, sdsl::conf::SDSL_BLOCK_SIZE * sizeof(T));
+      written_bytes += sdsl::conf::SDSL_BLOCK_SIZE * sizeof(T);
+      p += sdsl::conf::SDSL_BLOCK_SIZE;
+      idx += sdsl::conf::SDSL_BLOCK_SIZE;
+    }
+    out.write((char *)p, ((size) - idx) * sizeof(T));
+    written_bytes += ((size) - idx) * sizeof(T);
+
+  }
+  return written_bytes;
+}
+
 //! Serialize each element of an std::vector
 /*!
  * \param vec The vector which should be serialized.
@@ -334,6 +358,29 @@ my_serialize(const std::vector<X> &x,
              std::string name = "", typename std::enable_if<std::is_fundamental<X>::value>::type * = 0)
 {
   return sdsl::serialize(x.size(), out, v, name) + my_serialize_vector(x, out, v, name);
+}
+
+
+/**
+ * @brief Load an array of size elements into p. p should be preallocated.
+ * 
+ * \tparam T 
+ * \tparam size_type 
+ * @param p 
+ * @param size 
+ * @param in 
+ */
+template <class T, typename size_type>
+void my_load_array(T *p, const size_type size, std::istream &in, typename std::enable_if<std::is_fundamental<T>::value>::type * = 0)
+{
+  size_type idx = 0;
+  while (idx + sdsl::conf::SDSL_BLOCK_SIZE < (size))
+  {
+    in.read((char *)p, sdsl::conf::SDSL_BLOCK_SIZE * sizeof(T));
+    p += sdsl::conf::SDSL_BLOCK_SIZE;
+    idx += sdsl::conf::SDSL_BLOCK_SIZE;
+  }
+  in.read((char *)p, ((size) - idx) * sizeof(T));
 }
 
 //! Load all elements of a vector from a input stream

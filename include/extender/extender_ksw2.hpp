@@ -38,7 +38,7 @@
 #include <ksw2.h>
 
 #include <libgen.h>
-
+#include <seqidx.hpp>
 ////////////////////////////////////////////////////////////////////////////////
 /// SLP definitions
 ////////////////////////////////////////////////////////////////////////////////
@@ -112,6 +112,21 @@ public:
         t_insert_end = std::chrono::high_resolution_clock::now();
 
         verbose("Matching statistics index loading complete");
+        verbose("Memory peak: ", malloc_count_peak());
+        verbose("Elapsed time (s): ", std::chrono::duration<double, std::ratio<1>>(t_insert_end - t_insert_start).count());
+
+        std::string filename_idx = filename + idx.get_file_extension();
+        verbose("Loading fasta index file: " + filename_idx);
+        t_insert_start = std::chrono::high_resolution_clock::now();
+
+
+        ifstream fs_idx(filename_idx);
+        idx.load(fs_idx);
+        fs_idx.close();
+
+        t_insert_end = std::chrono::high_resolution_clock::now();
+
+        verbose("Fasta index loading complete");
         verbose("Memory peak: ", malloc_count_peak());
         verbose("Elapsed time (s): ", std::chrono::duration<double, std::ratio<1>>(t_insert_end - t_insert_start).count());
 
@@ -402,7 +417,7 @@ public:
                 // Compute the MD:Z field and thenumber of mismatches
                 std::pair<std::string, size_t> md_nm = write_MD_core((uint8_t *)ref, seq, ez.cigar, ez.n_cigar, tmp, 0);
 
-                write_sam(ez.score, score2, min_score, ref_pos, "human", read, strand, out, cigar_s, md_nm.first, md_nm.second);
+                write_sam(ez.score, score2, min_score, ref_pos, idx[ref_pos].c_str(), read, strand, out, cigar_s, md_nm.first, md_nm.second);
             }
             else
             {
@@ -448,7 +463,7 @@ public:
                 // Compute the MD:Z field and thenumber of mismatches
                 std::pair<std::string, size_t> md_nm = write_MD_core((uint8_t *)ref, seq, cigar, n_cigar, tmp, 0);
 
-                write_sam(score, score2, min_score, ref_pos, "human", read, strand, out, cigar_s, md_nm.first, md_nm.second);
+                write_sam(score, score2, min_score, ref_pos, idx[ref_pos].c_str(), read, strand, out, cigar_s, md_nm.first, md_nm.second);
 
                 delete cigar;
             }
@@ -686,6 +701,7 @@ public:
 protected:
     ms_t ms;
     slp_t ra;
+    seqidx idx;
     // SelfShapedSlp<uint32_t, DagcSd, DagcSd, SelSd> ra;
 
     size_t min_len = 0;
