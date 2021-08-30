@@ -71,7 +71,7 @@ void parseArgs(int argc, char *const argv[], Args &arg)
                     "     batch: [integer] - number of batches per therad pool (def. 1)\n");
 
   std::string sarg;
-  while ((c = getopt(argc, argv, "l:hp:b:t:")) != -1)
+  while ((c = getopt(argc, argv, "l:hp:b:t:q")) != -1)
   {
     switch (c)
     {

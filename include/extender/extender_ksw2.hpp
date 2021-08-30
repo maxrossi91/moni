@@ -416,8 +416,8 @@ public:
 
                 // Compute the MD:Z field and thenumber of mismatches
                 std::pair<std::string, size_t> md_nm = write_MD_core((uint8_t *)ref, seq, ez.cigar, ez.n_cigar, tmp, 0);
-
-                write_sam(ez.score, score2, min_score, ref_pos, idx[ref_pos].c_str(), read, strand, out, cigar_s, md_nm.first, md_nm.second);
+                std::pair<std::string,size_t> pos = idx.index(ref_pos);
+                write_sam(ez.score, score2, min_score, pos.second, pos.first.c_str(), read, strand, out, cigar_s, md_nm.first, md_nm.second);
             }
             else
             {
@@ -462,8 +462,8 @@ public:
 
                 // Compute the MD:Z field and thenumber of mismatches
                 std::pair<std::string, size_t> md_nm = write_MD_core((uint8_t *)ref, seq, cigar, n_cigar, tmp, 0);
-
-                write_sam(score, score2, min_score, ref_pos, idx[ref_pos].c_str(), read, strand, out, cigar_s, md_nm.first, md_nm.second);
+                std::pair<std::string,size_t> pos = idx.index(ref_pos);
+                write_sam(score, score2, min_score, pos.second, pos.first.c_str(), read, strand, out, cigar_s, md_nm.first, md_nm.second);
 
                 delete cigar;
             }
@@ -696,6 +696,14 @@ public:
             }
         }
         return target_o + "\n" + bars_o + "\n" + seq_o + "\n";
+    }
+
+    std::string to_sam()
+    {
+        std::string res = "@HD VN:1.6 SO:unknown\n";
+        res += idx.to_sam();
+        res += "@PG\tID:moni\tPN:moni\tVN:0.1.0\n";
+        return res; 
     }
 
 protected:

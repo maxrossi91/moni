@@ -409,6 +409,8 @@ size_t mt_extend(extender_t *extender, std::string pattern_filename, std::string
     if ((fd = fopen(std::string(sam_filename + ".sam").c_str(), "w")) == nullptr)
         error("open() file " + std::string(sam_filename + ".sam") + " failed");
 
+    fprintf(fd, "%s", extender->to_sam().c_str());
+
     for (size_t i = 0; i < k * n_threads; ++i)
     {
         tot_reads += params[i].n_reads;
@@ -442,6 +444,8 @@ size_t st_extend(extender_t *extender, std::string pattern_filename, std::string
 
     if ((sam_fd = fopen(sam_filename.c_str(), "w")) == nullptr)
         error("open() file " + sam_filename + " failed");
+
+    fprintf(sam_fd, "%s", extender->to_sam().c_str());
 
     gzFile fp = gzopen(pattern_filename.c_str(), "r");
     kseq_t *seq = kseq_init(fp);

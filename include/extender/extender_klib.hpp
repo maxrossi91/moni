@@ -39,6 +39,7 @@
 #include <ssw.h>
 
 #include <libgen.h>
+#include <seqidx.hpp>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// SLP definitions
@@ -110,6 +111,22 @@ public:
         verbose("Matching statistics index loading complete");
         verbose("Memory peak: ", malloc_count_peak());
         verbose("Elapsed time (s): ", std::chrono::duration<double, std::ratio<1>>(t_insert_end - t_insert_start).count());
+
+        std::string filename_idx = filename + idx.get_file_extension();
+        verbose("Loading fasta index file: " + filename_idx);
+        t_insert_start = std::chrono::high_resolution_clock::now();
+
+
+        ifstream fs_idx(filename_idx);
+        idx.load(fs_idx);
+        fs_idx.close();
+
+        t_insert_end = std::chrono::high_resolution_clock::now();
+
+        verbose("Fasta index loading complete");
+        verbose("Memory peak: ", malloc_count_peak());
+        verbose("Elapsed time (s): ", std::chrono::duration<double, std::ratio<1>>(t_insert_end - t_insert_start).count());
+
 
         verbose("Initialize the local aligner");
         t_insert_start = std::chrono::high_resolution_clock::now();
@@ -248,7 +265,7 @@ public:
 
             if (r.score >= min_score)
             {
-                ssw_write_sam(r, "human", read, strand, out, cig, mismatch);
+                ssw_write_sam(r, idx[r.tb].c_str(), read, strand, out, cig, mismatch);
                 extended = true;
             }
 
@@ -323,9 +340,18 @@ public:
         }
     }
 
+    std::string to_sam()
+    {
+        std::string res = "@HD VN:1.6 SO:unknown\n";
+        res += idx.to_sam();
+        res += "@PG ID:moni PN:moni VN:0.1.0\n";
+        return res; 
+    }
+
 protected:
     ms_pointers<> ms;
     slp_t ra;
+    seqidx idx;
 
     size_t min_len = 0;
     size_t extended_reads = 0;
