@@ -417,6 +417,7 @@ struct Args
 {
   std::string filename = "";
   std::string patterns = ""; // path to patterns file
+  std::string output   = ""; // output file prefix
   size_t l = 25;             // minumum MEM length
   size_t th = 1;             // number of threads
   bool shaped_slp = false;   // use shaped slp
@@ -428,20 +429,24 @@ void parseArgs(int argc, char *const argv[], Args &arg)
   extern char *optarg;
   extern int optind;
 
-  std::string usage("usage: " + std::string(argv[0]) + " infile [-p patterns] [-t threads] [-l len] [-q shaped_slp] [-b batch]\n\n" +
+  std::string usage("usage: " + std::string(argv[0]) + " infile [-p patterns] [-o output] [-t threads] [-l len] [-q shaped_slp] [-b batch]\n\n" +
                     "Copmputes the matching statistics of the reads in the pattern against the reference index in infile.\n" +
                     "shaped_slp: [boolean] - use shaped slp. (def. false)\n" +
                     "   pattens: [string]  - path to patterns file.\n" +
+                    "    output: [string]  - output file prefix.\n" +
                     "       len: [integer] - minimum MEM lengt (def. 25)\n" +
                     "    thread: [integer] - number of threads (def. 1)\n");
 
   std::string sarg;
-  while ((c = getopt(argc, argv, "l:hp:t:")) != -1)
+  while ((c = getopt(argc, argv, "l:hp:o:t:")) != -1)
   {
     switch (c)
     {
     case 'p':
       arg.patterns.assign(optarg);
+      break;
+    case 'o':
+      arg.output.assign(optarg);
       break;
     case 'l':
       sarg.assign(optarg);
@@ -491,6 +496,8 @@ void dispatcher(Args &args)
 
   std::string base_name = basename(args.filename.data());
   std::string out_filename = args.patterns + "_" + base_name;
+  if(args.output != "")
+    out_filename = args.output;
 
   if (is_gzipped(args.patterns))
   {

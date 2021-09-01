@@ -50,6 +50,7 @@ struct Args
 {
   std::string filename = "";
   std::string patterns = ""; // path to patterns file
+  std::string output   = ""; // output file prefix
   size_t l = 25;             // minumum MEM length
   size_t th = 1;             // number of threads
   size_t b = 1;              // number of batches per thread pool
@@ -66,17 +67,21 @@ void parseArgs(int argc, char *const argv[], Args &arg)
                     "Extends the MEMs of the reads in the pattern against the reference index in infile.\n" +
                     "shaped_slp: [boolean] - use shaped slp. (def. false)\n" +
                     "   pattens: [string]  - path to patterns file.\n" +
+                    "    output: [string]  - output file prefix.\n" +
                     "       len: [integer] - minimum MEM lengt (def. 25)\n" +
                     "    thread: [integer] - number of threads (def. 1)\n" +
                     "     batch: [integer] - number of batches per therad pool (def. 1)\n");
 
   std::string sarg;
-  while ((c = getopt(argc, argv, "l:hp:b:t:q")) != -1)
+  while ((c = getopt(argc, argv, "l:hp:o:b:t:q")) != -1)
   {
     switch (c)
     {
     case 'p':
       arg.patterns.assign(optarg);
+      break;
+    case 'o':
+      arg.output.assign(optarg);
       break;
     case 'l':
       sarg.assign(optarg);
@@ -129,6 +134,8 @@ void dispatcher(Args &args){
 
   std::string base_name = basename(args.filename.data());
   std::string sam_filename = args.patterns + "_" + base_name + "_" + std::to_string(args.l);
+  if(args.output != "")
+    sam_filename = args.output;
 
   if (is_gzipped(args.patterns))
   {

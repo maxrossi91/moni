@@ -254,13 +254,20 @@ class SLP(threading.Thread):
         'shaped': 'slp'
       }
 
+      if args.output != ".":
+        outfile = args.output
+      else:
+        outfile = args.reference
+      
+
       sstart = time.time()
       # ---- compress the dictionary 
       start = time.time()
       exe = shaped_slp
-      command = "{exe} -i {file} -o {file}.{ext} -e {grammar} -f Bigrepair".format(
+      command = "{exe} -i {file} -o {outfile}.{ext} -e {grammar} -f Bigrepair".format(
                 exe = os.path.join(bigrepair_dirname, exe), file=args.reference,
-                ext = grammar_extensions[args.grammar], grammar = grammars[args.grammar])
+                ext = grammar_extensions[args.grammar], outfile=outfile,
+                grammar = grammars[args.grammar])
       print("==== ShapedSLP construction.\nCommand:", command, flush=True)
       if(execute_command(command,logfile,logfile_name)!=True):
         return
@@ -383,10 +390,11 @@ class build_moni_ms(threading.Thread):
         if not os.path.exists(args.output):
           os.makedirs(args.output)
 
-        command = "cp {ref}.thrc.ms {out}/{name}.thrc.ms".format(ref=args.reference, out=args.output, name=os.path.basename(args.reference))
+        command = "cp {ref}.thrbv.ms {out}.thrbv.ms".format(ref=args.reference, out=args.output)
+        # command = "cp {ref}.thrbv.ms {out}/{name}.thrbv.ms".format(ref=args.reference, out=args.output, name=os.path.basename(args.reference))
         if(execute_command(command, logfile, logfile_name) != True):
           return
-        command = "cp {ref}.slp {out}/{name}.slp".format(ref=args.reference, out=args.output, name=os.path.basename(args.reference))
+        command = "cp {ref}.idx {out}.idx".format(ref=args.reference, out=args.output)
         if(execute_command(command, logfile, logfile_name) != True):
           return
 
@@ -400,8 +408,11 @@ def build(args):
     return
   
   filename = os.path.basename(args.reference)
+  if args.output != ".":
+    logfile_name = args.output + ".moni.log"
+  else:
+    logfile_name = args.reference + ".moni.log"
 
-  logfile_name = args.reference + ".moni.log"
   # get main bigbwt directory
   args.exe_dir = os.path.split(sys.argv[0])[0]
   print("Sending logging messages to file:", logfile_name, flush=True)
@@ -526,6 +537,8 @@ class run_helper(threading.Thread):
         command += " -b {}".format(args.batch)
       if args.grammar == "shaped":
         command += " -q"
+      if args.output != ".":
+        command += " -o {}".format(args.output)
 
       print("==== Running {name}. Command:".format(
           name=exe_name), command, flush=True)
@@ -542,6 +555,8 @@ class run_helper(threading.Thread):
 
 def run(args):
   logfile_name = args.pattern + "." + args.which + ".log"
+  if args.output != ".":
+    logfile_name = args.output + "." + args.which + ".log"
   # get main bigbwt directory
   args.exe_dir = os.path.split(sys.argv[0])[0]
   print("Sending logging messages to file:", logfile_name, flush=True)
