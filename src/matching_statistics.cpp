@@ -234,9 +234,11 @@ public:
   }
 
   // The outfile has the following format. The first size_t integer store the
-  // length l of the query. Then the following l size_t integers stores the
-  // pointers of the matching statistics, and the following l size_t integers
-  // stores the lengths of the mathcing statistics.
+  // length l of the name. Then the following l characters stores the name of
+  // the read. The following size_t integer store the length l of the query. 
+  // Then the following l size_t integers stores the pointers of the 
+  // matching statistics, and the following l size_t integers stores the lengths
+  // of the mathcing statistics.
   void matching_statistics(kseq_t *read, FILE* out)
   {
     auto pointers = ms.query(read->seq.s, read->seq.l);
@@ -264,6 +266,10 @@ public:
     // }
 
     assert(lengths.size() == pointers.size());
+
+    size_t h_length = read->name.l;
+    fwrite(&h_length, sizeof(size_t), 1,out);
+    fwrite(read->name.s, sizeof(char),h_length,out);
 
     size_t q_length = pointers.size();
     fwrite(&q_length, sizeof(size_t), 1,out);
@@ -544,8 +550,29 @@ void dispatcher(Args &args)
     size_t length = 0;
     size_t m = 100; // Reserved size for pointers and lengths
     size_t *mem = (size_t *)malloc(m * sizeof(size_t));
+    size_t s = 100; // Reserved size for read name
+    char* rname = (char *)malloc(s * sizeof(char));
     while (!feof(in_fd) and fread(&length, sizeof(size_t), 1, in_fd) > 0)
     {
+      // Reading read name
+      if (s < length)
+      {
+        // Resize lengths and pointers
+        s = length;
+        rname = (char *)realloc(rname, m * sizeof(char));
+      }
+
+      if ((fread(rname, sizeof(char), length, in_fd)) != length)
+        error("fread() file " + std::string(tmp_filename) + " failed");
+
+      // TODO: Store the fasta headers somewhere
+      f_pointers << ">" + std::string(rname,length) << endl;
+      f_lengths << ">" + std::string(rname,length) << endl;
+
+      // Reading MEMs
+      if ((fread(&length, sizeof(size_t), 1, in_fd)) != 1)
+        error("fread() file " + std::string(tmp_filename) + " failed");
+
       if (m < length)
       {
         // Resize lengths and pointers
@@ -557,7 +584,7 @@ void dispatcher(Args &args)
         error("fread() file " + std::string(tmp_filename) + " failed");
 
       // TODO: Store the fasta headers somewhere
-      f_pointers << ">" + std::to_string(n_seq) << endl;
+      // f_pointers << ">" + std::to_string(n_seq) << endl;
       for (size_t i = 0; i < length; ++i)
         f_pointers << mem[i] << " ";
       f_pointers << endl;
@@ -565,7 +592,7 @@ void dispatcher(Args &args)
       if ((fread(mem, sizeof(size_t), length, in_fd)) != length)
         error("fread() file " + std::string(tmp_filename) + " failed");
 
-      f_lengths << ">" + std::to_string(n_seq) << endl;
+      // f_lengths << ">" + std::to_string(n_seq) << endl;
       for (size_t i = 0; i < length; ++i)
         f_lengths << mem[i] << " ";
       f_lengths << endl;
