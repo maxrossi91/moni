@@ -26,6 +26,18 @@ target_include_directories(ms PUBLIC    "../include/ms"
                                         )
 target_compile_options(ms PUBLIC "-std=c++17")
 
+add_executable(mems mems.cpp ${bigbwt_SOURCE_DIR}/xerrors.c)
+target_link_libraries(mems common sdsl divsufsort divsufsort64 malloc_count ri pthread)
+target_include_directories(mems PUBLIC    "../include/ms" 
+                                        "../include/common" 
+                                        "${shaped_slp_SOURCE_DIR}" 
+                                        "${FOLCA_SOURCE_DIR}" 
+                                        "${SUX_SOURCE_DIR}/function" 
+                                        "${SUX_SOURCE_DIR}/support"
+                                        "${bigbwt_SOURCE_DIR}"
+                                        )
+target_compile_options(mems PUBLIC "-std=c++17")
+
 add_executable(rlebwt_ms_build rlebwt_ms_build.cpp)
 target_link_libraries(rlebwt_ms_build common sdsl divsufsort divsufsort64 malloc_count ri)
 target_include_directories(rlebwt_ms_build PUBLIC    "../include/ms" 

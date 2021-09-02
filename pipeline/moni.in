@@ -85,6 +85,7 @@ shaped_slp              = os.path.join(shaped_slp_dirname, "SlpEncBuild")
 
 run_moni_exe            = os.path.join(compress_dirname, "extend_ksw2")
 run_moni_ms_exe         = os.path.join(compress_dirname, "ms")
+run_moni_mems_exe       = os.path.join(compress_dirname, "mems")
 
 
 class PFPthresholds(threading.Thread):
@@ -569,6 +570,12 @@ def run(args):
       run_moni_ms.start()
       run_moni_ms.join()
 
+    if args.which == 'mems':
+      run_moni_ms = run_helper(
+              name="MONI-MEMS", args=args, counter=2,exe=run_moni_mems_exe)
+      run_moni_ms.start()
+      run_moni_ms.join()
+
     if args.which == 'extend':
       run_moni = run_helper(
               name="MONI", args=args, counter=2,exe=run_moni_exe)
@@ -598,6 +605,7 @@ def main():
   subparsers = parser.add_subparsers(title='subcommands',description='valid subcommands', help='additional help')
   build_parser = subparsers.add_parser('build', help='build the index for the reference', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
   ms_parser = subparsers.add_parser('ms', help='compute the matching statistics', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+  mems_parser = subparsers.add_parser('mems', help='compute the maximal exact matches', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
   extend_parser = subparsers.add_parser('extend', help='extend the MEMs ofthe reads in the reference genome', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
   parser.add_argument('--version', help='print the version number', action='store_true')
@@ -618,10 +626,17 @@ def main():
 
   ms_parser.add_argument('-i', '--index', help='reference index folder', type=str, required=True)
   ms_parser.add_argument('-p', '--pattern', help='the input query', type=str, required=True)
-  ms_parser.add_argument('-o', '--output', help='output directory path', type=str, default='.')
+  ms_parser.add_argument('-o', '--output', help='output file prefix', type=str, default='.')
   ms_parser.add_argument('-t', '--threads', help='number of helper threads', default=1, type=int)
   ms_parser.add_argument('-g', '--grammar', help='select the grammar [plain, shaped]', type=str, default='plain')
   ms_parser.set_defaults(which='ms')
+
+  mems_parser.add_argument('-i', '--index', help='reference index folder', type=str, required=True)
+  mems_parser.add_argument('-p', '--pattern', help='the input query', type=str, required=True)
+  mems_parser.add_argument('-o', '--output', help='output file prefix', type=str, default='.')
+  mems_parser.add_argument('-t', '--threads', help='number of helper threads', default=1, type=int)
+  mems_parser.add_argument('-g', '--grammar', help='select the grammar [plain, shaped]', type=str, default='plain')
+  mems_parser.set_defaults(which='mems')
 
   extend_parser.add_argument('-i', '--index', help='reference index folder', type=str, required=True)
   extend_parser.add_argument('-p', '--pattern', help='the input query', type=str, required=True)
@@ -636,7 +651,7 @@ def main():
     base(args)
   elif args.which == 'build':
     build(args)
-  elif args.which == 'ms' or args.which == 'extend':
+  elif args.which == 'ms' or args.which == 'mems' or args.which == 'extend':
     run(args)
 
   return
