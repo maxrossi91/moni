@@ -535,7 +535,7 @@ class run_helper(threading.Thread):
           args.exe_dir, exe), file=args.index,
           query=args.pattern, th=args.threads)
       if exe_name == "MONI":
-        command += " -b {}".format(args.batch)
+        command += " -b {} -A {} -B {} -O {} -E {} -L {} ".format(args.batch,args.smatch, args.smismatch, args.gapo, args.gape, args.extl)
       if args.grammar == "shaped":
         command += " -q"
       if args.output != ".":
@@ -644,6 +644,11 @@ def main():
   extend_parser.add_argument('-t', '--threads', help='number of helper threads', default=1, type=int)
   extend_parser.add_argument('-b', '--batch', help='number of reads per thread batch', default=100, type=int)
   extend_parser.add_argument('-g', '--grammar', help='select the grammar [plain, shaped]', type=str, default='plain')
+  extend_parser.add_argument('-L', '--extl', help='length of reference substring for extension', type=int, default=100)
+  extend_parser.add_argument('-A', '--smatch', help='match score value', type=int, default=2)
+  extend_parser.add_argument('-B', '--smismatch', help='mismatch penalty value', type=int, default=4)
+  extend_parser.add_argument('-O', '--gapo', help='coma separated gap open penalty values', type=str, default='4,13')
+  extend_parser.add_argument('-E', '--gape', help='coma separated gap extension penalty values', type=str, default='2,1')
   extend_parser.set_defaults(which='extend')
   args = parser.parse_args()
 

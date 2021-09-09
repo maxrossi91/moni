@@ -55,6 +55,20 @@ struct Args
   size_t th = 1;             // number of threads
   size_t b = 1;              // number of batches per thread pool
   bool shaped_slp = false;   // use shaped slp
+  size_t ext_len = 100;      // Extension length
+  // size_t top_k = 1;       // Report the top_k alignments
+
+  // ksw2 parameters
+  int8_t smatch = 2;      // Match score default
+  int8_t smismatch = 4;   // Mismatch score default
+  int8_t gapo = 4;        // Gap open penalty
+  int8_t gapo2 = 13;      // Gap open penalty
+  int8_t gape = 2;        // Gap extension penalty
+  int8_t gape2 = 1;       // Gap extension penalty
+  // int end_bonus = 400;    // Bonus to add at the extension score to declare the alignment
+
+  // int w = -1;             // Band width
+  // int zdrop = -1;         // Zdrop enable
 };
 
 void parseArgs(int argc, char *const argv[], Args &arg)
@@ -63,17 +77,23 @@ void parseArgs(int argc, char *const argv[], Args &arg)
   extern char *optarg;
   extern int optind;
 
-  std::string usage("usage: " + std::string(argv[0]) + " infile [-p patterns] [-t threads] [-l len] [-q shaped_slp] [-b batch]\n\n" +
+  std::string usage("usage: " + std::string(argv[0]) + " infile [-p patterns] [-t threads] [-l len] [-q shaped_slp] [-b batch] [-L ext_l] [-A smatch] [-B smismatc] [-O gapo] [-E gape]\n\n" +
                     "Extends the MEMs of the reads in the pattern against the reference index in infile.\n" +
                     "shaped_slp: [boolean] - use shaped slp. (def. false)\n" +
                     "   pattens: [string]  - path to patterns file.\n" +
                     "    output: [string]  - output file prefix.\n" +
                     "       len: [integer] - minimum MEM lengt (def. 25)\n" +
                     "    thread: [integer] - number of threads (def. 1)\n" +
+                    "     ext_l: [integer] - length of reference substring for extension (def. " + std::to_string(arg.ext_len) + ")\n" +
+                    "    smatch: [integer] - match score value (def. " + std::to_string(arg.smatch) + ")\n" +
+                    " smismatch: [integer] - mismatch penalty value (def. " + std::to_string(arg.smismatch) + ")\n" +
+                    "      gapo: [integer] - gap open penalty value (def. " + std::to_string(arg.gapo) + "," + std::to_string(arg.gapo2) + ")\n" +
+                    "      gape: [integer] - gap extension penalty value (def. " + std::to_string(arg.gape) + "," + std::to_string(arg.gape2) + ")\n" +
                     "     batch: [integer] - number of batches per therad pool (def. 1)\n");
 
   std::string sarg;
-  while ((c = getopt(argc, argv, "l:hp:o:b:t:q")) != -1)
+  char* s;
+  while ((c = getopt(argc, argv, "l:hp:o:b:t:qA:B:O:E:L:")) != -1)
   {
     switch (c)
     {
@@ -94,6 +114,26 @@ void parseArgs(int argc, char *const argv[], Args &arg)
     case 'b':
       sarg.assign(optarg);
       arg.b = stoi(sarg);
+      break;
+    case 'L':
+      sarg.assign(optarg);
+      arg.ext_len = stoi(sarg);
+      break;
+    case 'A':
+      sarg.assign(optarg);
+      arg.smatch = stoi(sarg);
+      break;
+    case 'B':
+      sarg.assign(optarg);
+      arg.smismatch = stoi(sarg);
+      break;
+    case 'O':
+      arg.gapo = arg.gapo2 = strtol(optarg, &s, 10);
+      if (*s == ',') arg.gapo2 = strtol(s+1, &s, 10);
+      break;
+    case 'E':
+      arg.gape = arg.gape2 = strtol(optarg, &s, 10);
+      if (*s == ',') arg.gape2 = strtol(s+1, &s, 10);
       break;
     case 'q':
       arg.shaped_slp = true;
@@ -118,12 +158,32 @@ void parseArgs(int argc, char *const argv[], Args &arg)
 
 //********** end argument options ********************
 
+
+template<typename extender_t>
+typename extender_t::config_t configurer(Args &args){
+  typename extender_t::config_t config;
+  
+  config.min_len    = args.l;           // Minimum MEM length
+  config.ext_len    = args.ext_len;     // Extension length
+
+  // ksw2 parameters
+  config.smatch     = args.smatch;      // Match score default
+  config.smismatch  = args.smismatch;   // Mismatch score default
+  config.gapo       = args.gapo;        // Gap open penalty
+  config.gapo2      = args.gapo2;       // Gap open penalty
+  config.gape       = args.gape;        // Gap extension penalty
+  config.gape2      = args.gape2;       // Gap extension penalty
+
+  return config;
+}
+
 template<typename extender_t>
 void dispatcher(Args &args){
   verbose("Construction of the extender");
   std::chrono::high_resolution_clock::time_point t_insert_start = std::chrono::high_resolution_clock::now();
 
-  extender_t extender(args.filename, args.l);
+
+  extender_t extender(args.filename, configurer<extender_t>(args));
 
   std::chrono::high_resolution_clock::time_point t_insert_end = std::chrono::high_resolution_clock::now();
   verbose("Memory peak: ", malloc_count_peak());
