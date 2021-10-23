@@ -42,7 +42,7 @@ largeb_repair_dirname   = dirname
 if not install:
 
   bigbwt_dirname        = os.path.join(dirname, "_deps/bigbwt-build")
-  bigrepair_dirname     = os.path.join(dirname, "_deps/bigrepair-src")
+  bigrepair_dirname     = os.path.join(dirname, "_deps/bigrepair-build")
   thresholds_dirname    = os.path.join(dirname, "_deps/pfp_thresholds-build/test/src")
   compress_dirname      = os.path.join(dirname, "src")
   shaped_slp_dirname    = os.path.join(dirname, "_deps/shaped_slp-build")
