@@ -12,7 +12,7 @@ Description = """
                 | |\/| | |  | | . ` | | |
                 | |  | | |__| | |\  |_| |_
                 |_|  |_|\____/|_| \_|_____|
-                                  ver 0.1.0
+                                  ver 0.2.0
 A Pangenomics Index for Finding MEMs.
 
 Build the index for highly repetive files using the approach
@@ -424,7 +424,8 @@ def build(args):
     start0 = start = time.time()
     if args.threads > 0:
       if args.f:
-        command = "{exe} {file} -w {wsize} -p {modulus} -t {th} -f".format(
+        # command = "{exe} {file} -w {wsize} -p {modulus} -t {th} -f".format(
+        command = "{exe} {file} -w {wsize} -p {modulus} -t 1 -f".format(
             exe=os.path.join(args.exe_dir, parse_fasta_exe),
             wsize=args.wsize, modulus=args.mod, th=args.threads, file=args.reference)
       else:
