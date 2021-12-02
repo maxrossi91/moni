@@ -93,7 +93,7 @@ def get_max_memory():
   except ImportError as e:
     print("psutil not found! Using system calls to get maximum memory size.")
     if sys.platform == "linux" or sys.platform == "linux2":
-      return int(os.popen('free').readlines()[1].split()[1])
+      return int(os.popen('free -b').readlines()[1].split()[1])
     elif sys.platform == "darwin":
       return int(os.popen('sysctl -n hw.memsize').readlines()[0].split()[0])
     
