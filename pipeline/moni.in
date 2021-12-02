@@ -3,7 +3,6 @@
 # Edited from bigbwt script file
 
 import sys, time, argparse, subprocess, os.path, threading, tempfile
-from psutil import virtual_memory
 
 Description = """
                   __  __  ____  _   _ _____
@@ -87,6 +86,17 @@ run_moni_exe            = os.path.join(compress_dirname, "extend_ksw2")
 run_moni_ms_exe         = os.path.join(compress_dirname, "ms")
 run_moni_mems_exe       = os.path.join(compress_dirname, "mems")
 
+def get_max_memory():
+  try:
+    from psutil import virtual_memory
+    return virtual_memory().total
+  except ImportError as e:
+    print("psutil not found! Using system calls to get maximum memory size.")
+    if sys.platform == "linux" or sys.platform == "linux2":
+      return int(os.popen('free').readlines()[1].split()[1])
+    elif sys.platform == "darwin":
+      return int(os.popen('sysctl -n hw.memsize').readlines()[0].split()[0])
+    
 
 class PFPthresholds(threading.Thread):
     def __init__(self, name, counter, args):
@@ -138,8 +148,8 @@ class bigrepair(threading.Thread):
       logfile_name = args.logfile_name
       print("{} bigrepair started!".format(self.getName()), flush=True)        # "Thread-x started!"
 
-      mem = virtual_memory()
-      repair_mem  = round(mem.total / 1024 / 1024) # total physical memory available in MB
+      mem = get_max_memory()
+      repair_mem  = round(mem / 1024 / 1024) # total physical memory available in MB
       print("RePair maximum memory: {}".format(repair_mem), flush=True)
 
       sstart = time.time()
