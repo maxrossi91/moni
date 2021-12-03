@@ -1,3 +1,6 @@
+[![Release](https://img.shields.io/github/release/maxrossi91/moni.svg)](https://github.com/maxrossi91/moni/releases)
+[![Downloads](https://img.shields.io/github/downloads/maxrossi91/moni/total?logo=github)](https://github.com/maxrossi91/moni/releases/download/v0.2.0/moni_0.2.0_amd64.deb)
+
 # MONI
 ```console
                            __  __  ____  _   _ _____
@@ -6,7 +9,7 @@
                           | |\/| | |  | | . ` | | |
                           | |  | | |__| | |\  |_| |_
                           |_|  |_|\____/|_| \_|_____|
-                                            ver 0.1.0
+                                            ver 0.2.0
 ```
 A Pangenomics Index for Finding MEMs.
 
@@ -52,12 +55,30 @@ usage: moni ms [-h] -i INDEX -p PATTERN [-o OUTPUT] [-t THREADS]
                         select the grammar [plain, shaped] (default: plain)
 ```
 
-### Computing the MEM extension with MONI and ksw2:
+### Computing the matching statistics with MONI:
 ```
-usage: moni extend [-h] -i INDEX -p PATTERN [-o OUTPUT] [-t THREADS]
+usage: moni mems [-h] -i INDEX -p PATTERN [-o OUTPUT] [-t THREADS]
   -h, --help            show this help message and exit
   -i INDEX, --index INDEX
                         reference index base name (default: None)
+  -p PATTERN, --pattern PATTERN
+                        the input query (default: None)
+  -o OUTPUT, --output OUTPUT
+                        output directory path (default: .)
+  -t THREADS, --threads THREADS
+                        number of helper threads (default: 1)
+  -g GRAMMAR, --grammar GRAMMAR
+                        select the grammar [plain, shaped] (default: plain)
+```
+
+### Computing the MEM extension with MONI and ksw2:
+```
+usage: moni extend [-h] -i INDEX -p PATTERN [-o OUTPUT] [-t THREADS] [-b BATCH] [-g GRAMMAR] [-L EXTL] [-A SMATCH] [-B SMISMATCH] [-O GAPO] [-E GAPE]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -i INDEX, --index INDEX
+                        reference index folder (default: None)
   -p PATTERN, --pattern PATTERN
                         the input query (default: None)
   -o OUTPUT, --output OUTPUT
@@ -68,6 +89,13 @@ usage: moni extend [-h] -i INDEX -p PATTERN [-o OUTPUT] [-t THREADS]
                         number of reads per thread batch (default: 100)
   -g GRAMMAR, --grammar GRAMMAR
                         select the grammar [plain, shaped] (default: plain)
+  -L EXTL, --extl EXTL  length of reference substring for extension (default: 100)
+  -A SMATCH, --smatch SMATCH
+                        match score value (default: 2)
+  -B SMISMATCH, --smismatch SMISMATCH
+                        mismatch penalty value (default: 4)
+  -O GAPO, --gapo GAPO  coma separated gap open penalty values (default: 4,13)
+  -E GAPE, --gape GAPE  coma separated gap extension penalty values (default: 2,1)
 ```
 
 # Example
@@ -102,23 +130,29 @@ This command will install the binaries to the default install location (e.g., `/
 
 ### Run
 
-##### Build the index for `yeast.fasta` in the `data` folder
+##### Build the index for `SARS-CoV2.1k.fa.gz` in the `data/SARS-CoV2` folder
 ```console
-./moni build -r ../data/yeast.fasta -f -t 4
+moni build -r data/SARS-CoV2/SARS-CoV2.1k.fa.gz -o sars-cov2 -f
 ```
-It produces two files `yeast.fasta.plain.slp` and `yeast.fasta.thrbv.ms` in the `data` folder which contain the grammar and the rlbwt and the thresholds respectively.
+It produces three files `sars-cov2.plain.slp`, `sars-cov2.thrbv.ms`, and `sars-cov2.idx` in the current folder which contain the grammar, the rlbwt and the thresholds, and the starting position and name of each fasta sequence in the reference file respectively.
 
-##### Compute the matching statistics of `reads.fastq` against `yeast.fasta` in the `data` folder
+##### Compute the matching statistics of `reads.fastq.gz ` against `SARS-CoV2.1k.fa.gz` in the `data/SARS-CoV2` folder
 ```console
-./moni ms -i ../data/yeast.fasta -p ../data/reads.fastq -t 4
+moni ms -i sars-cov2 -p data/SARS-CoV2/reads.fastq.gz -o reads
 ```
-It produces two output files `reads.fastq_yeast.fasta.lengths` and `reads.fastq_yeast.fasta.pointers` in the `data` folder which store the lengths and the positions of the matching statistics of the reads against the reference in a fasta-like format.  
+It produces two output files `reads.lengths` and `reads.pointers` in the current folder which store the lengths and the positions of the matching statistics of the reads against the reference in a fasta-like format.  
 
-##### Compute the MEM extension of `reads.fastq` against `yeast.fasta` in the `data` folder
+##### Compute the MEMs of `reads.fastq.gz ` against `SARS-CoV2.1k.fa.gz` in the `data/SARS-CoV2` folder
 ```console
-./moni extend -i ../data/yeast.fasta -p ../data/reads.fastq -t 4
+moni mems -i sars-cov2 -p data/SARS-CoV2/reads.fastq.gz -o reads
 ```
-It produces one output file `reads.fastq_yeast.fasta_25.sam` in the `data` folder which stores the information of the MEM extensions in sam format.  
+It produces one output file `reads.mems` in the current folder which store the MEMs reposted as pairs of position and lengths in a fasta-like format.  
+
+##### Compute the MEM extension of `reads.fastq.gz ` against `SARS-CoV2.1k.fa.gz` in the `data/SARS-CoV2` folder
+```console
+moni extend -i sars-cov2 -p data/SARS-CoV2/reads.fastq.gz -o reads
+```
+It produces one output file `reads.sam` in the current folder which stores the information of the MEM extensions in SAM format.  
 # External resources
 
 * [Big-BWT](https://github.com/alshai/Big-BWT.git)
