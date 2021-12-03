@@ -32,8 +32,9 @@ KSEQ_INIT(gzFile, gzread);
 
 #include <seqidx.hpp>
 
-#include <filesystem>
-namespace fs = std::filesystem;
+// #include <filesystem>
+// namespace fs = std::filesystem;
+#include <libgen.h>
 
 //*********************** Argument options ***************************************
 // struct containing command line parameters and other globals
@@ -102,7 +103,8 @@ int main(int argc, char *const argv[])
 
   std::string outfile = "";
   if(args.outpath == "") outfile = args.filename;
-  else outfile = args.outpath + fs::path(args.filename).filename().string();
+  else outfile = args.outpath + std::string(basename(args.filename.data()));
+  // else outfile = args.outpath + fs::path(args.filename).filename().string();
   outfile += idx.get_file_extension();
 
   std::ofstream out(outfile);
