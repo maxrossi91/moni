@@ -209,7 +209,7 @@ protected:
         // Compute runs_bv and runs_per_letter_bv
         for (size_t i = 0; i < run_heads_s.size(); ++i)
         {
-            size_t length;
+            size_t length = 0;
             lengths.read((char *)&length, 5);
             if (run_heads_s[i] <= TERMINATOR) // change 0 to 1
                 run_heads_s[i] = TERMINATOR;
@@ -272,7 +272,7 @@ ms_rle_string<ri::sparse_sd_vector, ri::huff_string>::ms_rle_string(std::ifstrea
     // Compute runs_bv and runs_per_letter_bv
     for (size_t i = 0; i < run_heads_s.size(); ++i)
     {
-        size_t length;
+        size_t length = 0;
         lengths.read((char *)&length, 5);
         if (run_heads_s[i] <= TERMINATOR) // change 0 to 1
             run_heads_s[i] = TERMINATOR;
