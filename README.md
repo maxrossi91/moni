@@ -173,20 +173,21 @@ It produces one output file `reads.sam` in the current folder which stores the i
 
 Please, if you use this tool in an academic setting cite the following papers:
 
-    @inproceedings{RossiOLGB21,
+    @article{RossiOLGB21,
     author      = { Massimiliano Rossi and 
                     Marco Oliva and
                     Ben Langmead and
                     Travis Gagie and
                     Christina Boucher},
-    title       = {MONI: A Pangenomics Index for Finding MEMs},
+    title       = {MONI: A Pangenomics Index for Finding Maximal Exact Matches},
     booktitle   = {Research in Computational Molecular Biology - 25th Annual 
                     International Conference, {RECOMB} 2021, Padova, Italy},
-    volume      = {},
-    series      = {Lecture Notes in Computer Science},
-    pages       = {},
-    publisher   = {Springer},
-    year        = {2021}
+    journal     = {Journal of Computational Biology},
+    volume      = {29},
+    number      = {2},
+    pages       = {169--187},
+    year        = {2022},
+    publisher   = {Mary Ann Liebert, Inc., publishers 140 Huguenot Street, 3rd Floor New~…}
     }
 
 
