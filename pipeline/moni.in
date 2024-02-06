@@ -417,6 +417,11 @@ def build(args):
   if args.f and args.threads > 0 and (".fq" in args.reference or ".fastq" in args.reference or ".fnq" in args.reference):
     print("moni does not current support FASTQ format! Exiting...", flush=True)
     return
+
+  # added to avoid using newscan.x until issue is further investigated
+  if args.f and args.threads > 0:
+    print("\nerror: moni's multithreading is not currently available.\n")
+    exit(0)
   
   filename = os.path.basename(args.reference)
   if args.output != ".":
