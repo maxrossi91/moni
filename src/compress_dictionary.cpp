@@ -73,6 +73,27 @@ void parseArgs(int argc, char *const argv[], Args &arg)
 
 //********** end argument options ********************
 
+std::string execute_cmd(const char* cmd) {
+    std::array<char, 256> buffer{};
+    std::string output = "";
+
+    std::string cmd_plus_stderr = std::string(cmd) + " 2>&1";
+    FILE* pipe = popen(cmd_plus_stderr.data(), "r"); // Extract stderr as well
+    if (!pipe) {throw std::runtime_error("popen() failed!");}
+
+    try {
+        std::size_t bytes;
+        while ((bytes = fread(buffer.data(), sizeof(char), sizeof(buffer), pipe))) {
+            output += std::string(buffer.data(), bytes);
+        }
+    } catch (...) {
+        pclose(pipe);
+        throw std::runtime_error("Error occurred while reading popen() stream.");
+    }
+    pclose(pipe);
+    return output;
+}
+
 int main(int argc, char *const argv[])
 {
 
@@ -135,9 +156,20 @@ int main(int argc, char *const argv[])
 
   verbose("Generating phrases");
   uint8_t* ptr = dict.data(); // Beginning of the current phrase
-  for(auto length: lengths)
+
+  bool empty_first_phrase = false;
+  for(size_t i = 0; i < lengths.size(); i++)
   {
-    size_t compressed_length = length - args.w;
+    size_t compressed_length = lengths[i] - args.w;
+
+    // special case: starts with a trigger string
+    if (i==0 && compressed_length == 0) {
+      ptr += lengths[i] + 1; 
+      empty_first_phrase = true;
+      continue;
+    } else if (i > 0 && compressed_length == 0) {
+      error("encountered a length=0 phrase after removing trigger string, which should not occur.");
+    }
 
     if ((fwrite(&compressed_length, 4, 1, dicz_len)) != 1)
       error("fwrite() file " + std::string(dicz_len_filename) + " failed");
@@ -145,12 +177,57 @@ int main(int argc, char *const argv[])
     if ((fwrite(ptr, sizeof(uint8_t), compressed_length, dicz)) != compressed_length)
       error("fwrite() file " + std::string(dicz_filename) + " failed");
 
-    ptr += length + 1;
+    ptr += lengths[i] + 1;
+  }
+  fclose(dicz);
+  fclose(dicz_len);
+
+  // re-writes parse file to shift down all the phrase ids by 1 
+  // since we removed the empty beginning phrase
+  if (empty_first_phrase) {
+    verbose("alert: found that the first phrase length is 0"
+            " so we will rewrite *.parse file to generated correct SLP.");
+
+    // read in all the phrase ids in parse
+    std::string parse_filename = args.filename + ".parse";
+    std::vector<uint32_t> parse_arr;
+    read_file(parse_filename.c_str(), parse_arr);
+
+    // make sure first phrase is lowest lexicographically and then remove it
+    if (parse_arr[0] != 1)
+      error("parse should being with lowest lexicographic phrase.");
+    parse_arr.erase(parse_arr.begin());
+
+    // rename the old parse file as *.parse_with_empty_phrase
+    std::ostringstream command_stream;
+    command_stream << "mv " << parse_filename << " " << (args.filename + ".parse_with_empty_phrase");
+    auto mv_log = execute_cmd(command_stream.str().c_str());
+
+    verbose("executed this command: " + command_stream.str());
+
+    // open new parse file for writing
+    FILE* new_parse_file;
+    if ((new_parse_file = fopen((args.filename + ".parse").c_str(), "w")) == nullptr)
+      verbose("open() file " + std::string(args.filename + ".parse" + " failed"));
+
+    // iterate through each element of parse and decrement by 1
+    for (size_t i = 0; i < parse_arr.size(); i++) {
+      if (parse_arr[i] == 1)
+        error("issue occurred when creating new parse file.");
+      parse_arr[i]--;
+      
+      // write it out 
+      if ((fwrite(&parse_arr[i], 4, 1, new_parse_file)) != 1)
+        verbose("fwrite() file " + std::string(args.filename + ".parse") + " failed"); 
+    }
+    fclose(new_parse_file);
   }
 
 
-  fclose(dicz);
-  fclose(dicz_len);
+
+
+
+
 
   std::chrono::high_resolution_clock::time_point t_insert_end = std::chrono::high_resolution_clock::now();
 
