@@ -274,7 +274,7 @@ ms_rle_string<ri::sparse_sd_vector, ri::huff_string>::ms_rle_string(std::ifstrea
     {
         size_t length = 0;
         lengths.read((char *)&length, 5);
-        if (run_heads_s[i] <= TERMINATOR) // change 0 to 1
+        if (unsigned(run_heads_s[i]) <= TERMINATOR) // change 0 to 1
             run_heads_s[i] = TERMINATOR;
 
         if(i % B == B - 1)
