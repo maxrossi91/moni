@@ -426,11 +426,12 @@ typedef std::pair<std::string, std::vector<uint8_t>> pattern_t;
 struct Args
 {
   std::string filename = "";
-  std::string patterns = ""; // path to patterns file
-  std::string output   = ""; // output file prefix
-  size_t l = 25;             // minumum MEM length
-  size_t th = 1;             // number of threads
-  bool shaped_slp = false;   // use shaped slp
+  std::string patterns = "";    // path to patterns file
+  std::string output   = "";    // output file prefix
+  size_t l = 25;                // minumum MEM length
+  size_t th = 1;                // number of threads
+  bool shaped_slp = false;      // use shaped slp
+  bool extended_output = false; // use shaped slp
 };
 
 void parseArgs(int argc, char *const argv[], Args &arg)
@@ -439,16 +440,17 @@ void parseArgs(int argc, char *const argv[], Args &arg)
   extern char *optarg;
   extern int optind;
 
-  std::string usage("usage: " + std::string(argv[0]) + " infile [-p patterns] [-o output] [-t threads] [-l len] [-q shaped_slp] [-b batch]\n\n" +
+  std::string usage("usage: " + std::string(argv[0]) + " infile [-p patterns] [-o output] [-t threads] [-l len] [-q shaped_slp] [-e extended_output] [-b batch]\n\n" +
                     "Copmputes the matching statistics of the reads in the pattern against the reference index in infile.\n" +
-                    "shaped_slp: [boolean] - use shaped slp. (def. false)\n" +
-                    "   pattens: [string]  - path to patterns file.\n" +
-                    "    output: [string]  - output file prefix.\n" +
-                    "       len: [integer] - minimum MEM lengt (def. 25)\n" +
-                    "    thread: [integer] - number of threads (def. 1)\n");
+                    "     shaped_slp: [boolean] - use shaped slp. (def. false)\n" +
+                    "extended_output: [boolean] - print one MEM occurrence in ref. (def. false)\n" +
+                    "        pattens: [string]  - path to patterns file.\n" +
+                    "         output: [string]  - output file prefix.\n" +
+                    "            len: [integer] - minimum MEM lengt (def. 25)\n" +
+                    "         thread: [integer] - number of threads (def. 1)\n");
 
   std::string sarg;
-  while ((c = getopt(argc, argv, "l:hp:o:t:")) != -1)
+  while ((c = getopt(argc, argv, "l:hp:o:t:qe")) != -1)
   {
     switch (c)
     {
@@ -468,6 +470,9 @@ void parseArgs(int argc, char *const argv[], Args &arg)
       break;
     case 'q':
       arg.shaped_slp = true;
+      break;
+    case 'e':
+      arg.extended_output = true;
       break;
     case 'h':
       error(usage);
@@ -600,10 +605,18 @@ void dispatcher(Args &args)
 
       // TODO: Store the fasta headers somewhere
       // f_mems << ">" + std::to_string(n_seq) << endl;
-      for (size_t i = 0; i < length; ++i)
-      {
-        std::pair<std::string, size_t> pos = idx.index(std::get<2>(mem[i]));
-        f_mems << "(" << std::get<0>(mem[i]) << "," << std::get<1>(mem[i]) << "," << pos.first << "," << pos.second << ") ";
+      if (args.extended_output){
+        for (size_t i = 0; i < length; ++i)
+        {
+          std::pair<std::string, size_t> pos = idx.index(std::get<2>(mem[i]));
+          f_mems << "(" << std::get<0>(mem[i]) << "," << std::get<1>(mem[i]) << "," << pos.first << "," << pos.second << ") ";
+        }
+      } else {
+        for (size_t i = 0; i < length; ++i)
+        {
+          f_mems << "(" << std::get<0>(mem[i]) << "," << std::get<1>(mem[i]) << ") ";
+        }
+
       }
       f_mems << endl;
 
