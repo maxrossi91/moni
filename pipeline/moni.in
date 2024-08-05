@@ -11,7 +11,7 @@ Description = """
                 | |\/| | |  | | . ` | | |
                 | |  | | |__| | |\  |_| |_
                 |_|  |_|\____/|_| \_|_____|
-                                  ver 0.2.0
+                                  ver 0.2.1
 A Pangenomics Index for Finding MEMs.
 
 Build the index for highly repetive files using the approach
@@ -554,6 +554,8 @@ class run_helper(threading.Thread):
         command += " -b {} -A {} -B {} -O {} -E {} -L {} ".format(args.batch,args.smatch, args.smismatch, args.gapo, args.gape, args.extl)
       if args.grammar == "shaped":
         command += " -q"
+      if exe_name == "MONI-MEMS" and args.extended_output:
+        command += " -e"
       if args.output != ".":
         command += " -o {}".format(args.output)
 
@@ -650,6 +652,7 @@ def main():
   mems_parser.add_argument('-i', '--index', help='reference index folder', type=str, required=True)
   mems_parser.add_argument('-p', '--pattern', help='the input query', type=str, required=True)
   mems_parser.add_argument('-o', '--output', help='output file prefix', type=str, default='.')
+  mems_parser.add_argument('-e', '--extended-output', help='output MEM occurrence in the reference', action='store_true')
   mems_parser.add_argument('-t', '--threads', help='number of helper threads', default=1, type=int)
   mems_parser.add_argument('-g', '--grammar', help='select the grammar [plain, shaped]', type=str, default='plain')
   mems_parser.set_defaults(which='mems')

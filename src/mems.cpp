@@ -40,6 +40,8 @@ extern "C" {
 #include <PlainSlp.hpp>
 #include <FixedBitLenCode.hpp>
 
+#include <seqidx.hpp>
+
 ////////////////////////////////////////////////////////////////////////////////
 /// kseq extra
 ////////////////////////////////////////////////////////////////////////////////
@@ -242,7 +244,7 @@ public:
   {
     auto pointers = ms.query(read->seq.s, read->seq.l);
     std::vector<size_t> lengths(pointers.size());
-    std::vector<std::pair<size_t,size_t>> mems;
+    std::vector<std::tuple<size_t,size_t,size_t>> mems;
 
     size_t l = 0;
     for (size_t i = 0; i < pointers.size(); ++i)
@@ -255,7 +257,7 @@ public:
       l = (l == 0 ? 0 : (l - 1));
  
       if((i == 0) or (lengths[i] >= lengths[i-1]))
-        mems.push_back(make_pair(i,lengths[i]));
+        mems.push_back(make_tuple(i,lengths[i],pos));
     }
 
     // Original MS computation
@@ -276,7 +278,7 @@ public:
     fwrite(read->name.s, sizeof(char),h_length,out);
     size_t q_length = mems.size();
     fwrite(&q_length, sizeof(size_t), 1,out);
-    fwrite(mems.data(), sizeof(std::pair<size_t,size_t>),q_length,out);
+    fwrite(mems.data(), sizeof(std::tuple<size_t,size_t,size_t>),q_length,out);
   }
 
 protected:
@@ -424,11 +426,12 @@ typedef std::pair<std::string, std::vector<uint8_t>> pattern_t;
 struct Args
 {
   std::string filename = "";
-  std::string patterns = ""; // path to patterns file
-  std::string output   = ""; // output file prefix
-  size_t l = 25;             // minumum MEM length
-  size_t th = 1;             // number of threads
-  bool shaped_slp = false;   // use shaped slp
+  std::string patterns = "";    // path to patterns file
+  std::string output   = "";    // output file prefix
+  size_t l = 25;                // minumum MEM length
+  size_t th = 1;                // number of threads
+  bool shaped_slp = false;      // use shaped slp
+  bool extended_output = false; // use shaped slp
 };
 
 void parseArgs(int argc, char *const argv[], Args &arg)
@@ -437,16 +440,17 @@ void parseArgs(int argc, char *const argv[], Args &arg)
   extern char *optarg;
   extern int optind;
 
-  std::string usage("usage: " + std::string(argv[0]) + " infile [-p patterns] [-o output] [-t threads] [-l len] [-q shaped_slp] [-b batch]\n\n" +
+  std::string usage("usage: " + std::string(argv[0]) + " infile [-p patterns] [-o output] [-t threads] [-l len] [-q shaped_slp] [-e extended_output] [-b batch]\n\n" +
                     "Copmputes the matching statistics of the reads in the pattern against the reference index in infile.\n" +
-                    "shaped_slp: [boolean] - use shaped slp. (def. false)\n" +
-                    "   pattens: [string]  - path to patterns file.\n" +
-                    "    output: [string]  - output file prefix.\n" +
-                    "       len: [integer] - minimum MEM lengt (def. 25)\n" +
-                    "    thread: [integer] - number of threads (def. 1)\n");
+                    "     shaped_slp: [boolean] - use shaped slp. (def. false)\n" +
+                    "extended_output: [boolean] - print one MEM occurrence in ref. (def. false)\n" +
+                    "        pattens: [string]  - path to patterns file.\n" +
+                    "         output: [string]  - output file prefix.\n" +
+                    "            len: [integer] - minimum MEM lengt (def. 25)\n" +
+                    "         thread: [integer] - number of threads (def. 1)\n");
 
   std::string sarg;
-  while ((c = getopt(argc, argv, "l:hp:o:t:")) != -1)
+  while ((c = getopt(argc, argv, "l:hp:o:t:qe")) != -1)
   {
     switch (c)
     {
@@ -466,6 +470,9 @@ void parseArgs(int argc, char *const argv[], Args &arg)
       break;
     case 'q':
       arg.shaped_slp = true;
+      break;
+    case 'e':
+      arg.extended_output = true;
       break;
     case 'h':
       error(usage);
@@ -528,6 +535,22 @@ void dispatcher(Args &args)
   auto mem_peak = malloc_count_peak();
   verbose("Memory peak: ", malloc_count_peak());
 
+  seqidx idx;
+
+  std::string filename_idx = args.filename + idx.get_file_extension();
+  verbose("Loading fasta index file: " + filename_idx);
+  t_insert_start = std::chrono::high_resolution_clock::now();
+
+  ifstream fs_idx(filename_idx);
+  idx.load(fs_idx);
+  fs_idx.close();
+
+  t_insert_end = std::chrono::high_resolution_clock::now();
+
+  verbose("Fasta index loading complete");
+  verbose("Memory peak: ", malloc_count_peak());
+  verbose("Elapsed time (s): ", std::chrono::duration<double, std::ratio<1>>(t_insert_end - t_insert_start).count());
+
   verbose("Printing plain output");
   t_insert_start = std::chrono::high_resolution_clock::now();
 
@@ -547,7 +570,7 @@ void dispatcher(Args &args)
 
     size_t length = 0;
     size_t m = 100; // Reserved size for pointers and lengths
-    std::vector<std::pair<size_t,size_t>> mem(m);
+    std::vector<std::tuple<size_t,size_t,size_t>> mem(m);
     size_t s = 100; // Reserved size for read name
     char* rname = (char *)malloc(s * sizeof(char));
     while (!feof(in_fd) and fread(&length, sizeof(size_t), 1, in_fd) > 0)
@@ -577,13 +600,24 @@ void dispatcher(Args &args)
         mem.resize(m);
       }
 
-      if ((fread(mem.data(), sizeof(std::pair<size_t,size_t>), length, in_fd)) != length)
+      if ((fread(mem.data(), sizeof(std::tuple<size_t,size_t,size_t>), length, in_fd)) != length)
         error("fread() file " + std::string(tmp_filename) + " failed");
 
       // TODO: Store the fasta headers somewhere
       // f_mems << ">" + std::to_string(n_seq) << endl;
-      for (size_t i = 0; i < length; ++i)
-        f_mems << "(" << mem[i].first << "," << mem[i].second << ") ";
+      if (args.extended_output){
+        for (size_t i = 0; i < length; ++i)
+        {
+          std::pair<std::string, size_t> pos = idx.index(std::get<2>(mem[i]));
+          f_mems << "(" << std::get<0>(mem[i]) << "," << std::get<1>(mem[i]) << "," << pos.first << "," << pos.second << ") ";
+        }
+      } else {
+        for (size_t i = 0; i < length; ++i)
+        {
+          f_mems << "(" << std::get<0>(mem[i]) << "," << std::get<1>(mem[i]) << ") ";
+        }
+
+      }
       f_mems << endl;
 
       n_seq++;

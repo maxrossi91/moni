@@ -18,10 +18,13 @@ if(NOT malloc_count_POPULATED)
   target_include_directories(memprofile PUBLIC "${malloc_count_SOURCE_DIR}")
 endif()
 
-  ## Add klib
+# # Add klib
+set(KLIB_COMMIT "9a063b33efd841fcc42d4b9f68cb78bb528bf75b")
+
 FetchContent_Declare(
   klib
   GIT_REPOSITORY https://github.com/attractivechaos/klib
+  GIT_TAG ${KLIB_COMMIT}
 )
 
 FetchContent_GetProperties(klib)
