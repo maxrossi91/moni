@@ -532,7 +532,7 @@ void dispatcher(Args &args)
 
   seqidx idx;
 
-  std::string filename_idx = filename + idx.get_file_extension();
+  std::string filename_idx = args.filename + idx.get_file_extension();
   verbose("Loading fasta index file: " + filename_idx);
   t_insert_start = std::chrono::high_resolution_clock::now();
 
@@ -603,7 +603,7 @@ void dispatcher(Args &args)
       for (size_t i = 0; i < length; ++i)
       {
         std::pair<std::string, size_t> pos = idx.index(std::get<2>(mem[i]));
-        f_mems << "(" << std::get<0>(mem[i]) << "," << std::get<1>(mem[i]) << "," << pos.first << "," pos.second << ") ";
+        f_mems << "(" << std::get<0>(mem[i]) << "," << std::get<1>(mem[i]) << "," << pos.first << "," << pos.second << ") ";
       }
       f_mems << endl;
 
