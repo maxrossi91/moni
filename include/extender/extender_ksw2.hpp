@@ -738,7 +738,7 @@ public:
 
     std::string to_sam()
     {
-        std::string res = "@HD VN:1.6 SO:unknown\n";
+        std::string res = "@HD\tVN:1.6\tSO:unknown\n";
         res += idx.to_sam();
         res += "@PG\tID:moni\tPN:moni\tVN:0.1.0\n";
         return res; 
