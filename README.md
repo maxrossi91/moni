@@ -57,7 +57,7 @@ usage: moni ms [-h] -i INDEX -p PATTERN [-o OUTPUT] [-t THREADS]
 
 ### Computing the matching statistics with MONI:
 ```
-usage: moni mems [-h] -i INDEX -p PATTERN [-o OUTPUT] [-e] [-t THREADS]
+usage: moni mems [-h] -i INDEX -p PATTERN [-o OUTPUT] [-e] [-s] [-t THREADS]
   -h, --help            show this help message and exit
   -i INDEX, --index INDEX
                         reference index base name (default: None)
@@ -67,6 +67,8 @@ usage: moni mems [-h] -i INDEX -p PATTERN [-o OUTPUT] [-e] [-t THREADS]
                         output directory path (default: .)
   -e, --extended-output
                         output MEM occurrence in the reference (default: False)
+  -s, --sam-output
+                        output MEM in a SAM formatted file. (default: False)
   -t THREADS, --threads THREADS
                         number of helper threads (default: 1)
   -g GRAMMAR, --grammar GRAMMAR
