@@ -570,7 +570,7 @@ void dispatcher(Args &args)
   verbose("Printing plain output");
   t_insert_start = std::chrono::high_resolution_clock::now();
 
-  mems_file_suffix = args.sam_output ? ".sam" : ".mems";
+  std::string mems_file_suffix = args.sam_output ? ".sam" : ".mems";
   std::ofstream f_mems(out_filename + mems_file_suffix);
 
   if (!f_mems.is_open())
@@ -580,7 +580,7 @@ void dispatcher(Args &args)
   {
       f_mems << "@HD\tVN:1.6\tSO:unknown\n";
       f_mems << idx.to_sam();
-      f_mems << "@PG\tID:moni\tPN:moni\tVN:0.1.3\n";
+      f_mems << "@PG\tID:moni\tPN:moni\tVN:0.2.2\n";
   }
 
   size_t n_seq = 0;
@@ -661,7 +661,7 @@ void dispatcher(Args &args)
           f_mems << (i?"256\t":"0\t");
           std::pair<std::string, size_t> pos = idx.index(std::get<2>(mem[i]));
           f_mems << pos.first << "\t" << pos.second + 1<< "\t60\t";
-          cigar = "";
+          std::string cigar = "";
           if (std::get<0>(mem[i]) > 0) cigar += std::string(std::get<0>(mem[i])) + "S";
           cigar += std::string(std::get<1>(mem[i])) + "M";
           size_t suff_length = s_length - (std::get<0>(mem[i]) + std::get<1>(mem[i]));
