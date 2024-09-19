@@ -656,15 +656,17 @@ void dispatcher(Args &args)
       if (args.sam_output){
         for (size_t i = 0; i < length; ++i)
         {
+          size_t mem_pos = std::get<0>(mem[i]);
+          size_t mem_len = std::get<1>(mem[i]);
+          std::pair<std::string, size_t> pos = idx.index(std::get<2>(mem[i]));
           f_mems << std::string(rname,rname_l) + "\t";
           // First MEM is primary, all other MEMs are non primary
           f_mems << (i?"256\t":"0\t");
-          std::pair<std::string, size_t> pos = idx.index(std::get<2>(mem[i]));
           f_mems << pos.first << "\t" << pos.second + 1<< "\t60\t";
           std::string cigar = "";
-          if (std::get<0>(mem[i]) > 0) cigar += std::string(std::get<0>(mem[i])) + "S";
-          cigar += std::string(std::get<1>(mem[i])) + "M";
-          size_t suff_length = s_length - (std::get<0>(mem[i]) + std::get<1>(mem[i]));
+          if (mem_pos > 0) cigar += std::string(mem_pos) + "S";
+          cigar += std::string(mem_len) + "M";
+          size_t suff_length = s_length - (mem_pos + mem_len);
           if (suff_length > 0) cigar += std::string(suff_length) + "S";
           f_mems << cigar + "\t" + std::string(rseq, s_length) + "\t" + std::string(rqual, s_length) + "\n";
         }
