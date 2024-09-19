@@ -189,7 +189,7 @@ std::string get_slp_file_extension<plain_slp_t>()
 }
 ////////////////////////////////////////////////////////////////////////////////
 
-template <typename slp_t>
+template <typename slp_t, bool sam_output = false>
 class mems_c
 {
 public:
@@ -240,7 +240,7 @@ public:
   // the read, the next size_t integer stores the number m of MEMs, and the 
   // following m size_t pairs of integers stores the positions and lengths of 
   // the MEMs.
-  void maxrimal_exact_matches(kseq_t *read, FILE* out)
+  void maximal_exact_matches(kseq_t *read, FILE* out)
   {
     auto pointers = ms.query(read->seq.s, read->seq.l);
     std::vector<size_t> lengths(pointers.size());
@@ -276,6 +276,13 @@ public:
     size_t h_length = read->name.l;
     fwrite(&h_length, sizeof(size_t), 1,out);
     fwrite(read->name.s, sizeof(char),h_length,out);
+    if(sam_output)
+    {
+      size_t s_length = read->seq.l;
+      fwrite(&s_length, sizeof(size_t), 1,out);
+      fwrite(read->seq.s, sizeof(char),s_length,out);
+      fwrite(read->qual.s, sizeof(char),s_length,out);
+    }
     size_t q_length = mems.size();
     fwrite(&q_length, sizeof(size_t), 1,out);
     fwrite(mems.data(), sizeof(std::tuple<size_t,size_t,size_t>),q_length,out);
@@ -343,7 +350,7 @@ void *mt_ms_worker(void *param)
   while ((ks_tell(seq) < p->end) && ((l = kseq_read(seq)) >= 0))
   {
 
-    p->ms->maxrimal_exact_matches(seq,out_fd);
+    p->ms->maximal_exact_matches(seq,out_fd);
 
   }
 
@@ -405,7 +412,7 @@ size_t st_ms(ms_t *ms, std::string pattern_filename, std::string out_filename)
   while ((l = kseq_read(seq)) >= 0)
   {
 
-    ms->maxrimal_exact_matches(seq, out_fd);
+    ms->maximal_exact_matches(seq, out_fd);
 
   }
 
@@ -431,7 +438,8 @@ struct Args
   size_t l = 25;                // minumum MEM length
   size_t th = 1;                // number of threads
   bool shaped_slp = false;      // use shaped slp
-  bool extended_output = false; // use shaped slp
+  bool extended_output = false; // print one MEM occurrence in the reference
+  bool sam_output = false;      // output MEMs in SAM format
 };
 
 void parseArgs(int argc, char *const argv[], Args &arg)
@@ -440,10 +448,11 @@ void parseArgs(int argc, char *const argv[], Args &arg)
   extern char *optarg;
   extern int optind;
 
-  std::string usage("usage: " + std::string(argv[0]) + " infile [-p patterns] [-o output] [-t threads] [-l len] [-q shaped_slp] [-e extended_output] [-b batch]\n\n" +
+  std::string usage("usage: " + std::string(argv[0]) + " infile [-p patterns] [-o output] [-t threads] [-l len] [-q shaped_slp] [-e extended_output] [-s sam_output] [-b batch]\n\n" +
                     "Copmputes the matching statistics of the reads in the pattern against the reference index in infile.\n" +
                     "     shaped_slp: [boolean] - use shaped slp. (def. false)\n" +
                     "extended_output: [boolean] - print one MEM occurrence in ref. (def. false)\n" +
+                    "     sam_output: [boolean] - print output in SAM format. (def. false)\n" +
                     "        pattens: [string]  - path to patterns file.\n" +
                     "         output: [string]  - output file prefix.\n" +
                     "            len: [integer] - minimum MEM lengt (def. 25)\n" +
@@ -474,6 +483,9 @@ void parseArgs(int argc, char *const argv[], Args &arg)
     case 'e':
       arg.extended_output = true;
       break;
+    case 's':
+      arg.sam_output = true;
+      break;
     case 'h':
       error(usage);
     case '?':
@@ -489,6 +501,10 @@ void parseArgs(int argc, char *const argv[], Args &arg)
   else
   {
     error("Invalid number of arguments\n", usage);
+  }
+
+  if (arg.extended_output && arg.sam_output) {
+    error("Cannot specify both extended_output and sam_output flags.\n", usage);
   }
 }
 
@@ -554,10 +570,18 @@ void dispatcher(Args &args)
   verbose("Printing plain output");
   t_insert_start = std::chrono::high_resolution_clock::now();
 
-  std::ofstream f_mems(out_filename + ".mems");
+  mems_file_suffix = args.sam_output ? ".sam" : ".mems";
+  std::ofstream f_mems(out_filename + mems_file_suffix);
 
   if (!f_mems.is_open())
-    error("open() file " + std::string(out_filename) + ".mems failed");
+    error("open() file " + std::string(out_filename) + mems_file_suffix + " failed");
+
+  if(args.sam_output)
+  {
+      f_mems << "@HD\tVN:1.6\tSO:unknown\n";
+      f_mems << idx.to_sam();
+      f_mems << "@PG\tID:moni\tPN:moni\tVN:0.1.3\n";
+  }
 
   size_t n_seq = 0;
   for (size_t i = 0; i < args.th; ++i)
@@ -569,25 +593,49 @@ void dispatcher(Args &args)
       error("open() file " + tmp_filename + " failed");
 
     size_t length = 0;
+    size_t rname_l = 0;
+    size_t s_length = 0;
     size_t m = 100; // Reserved size for pointers and lengths
     std::vector<std::tuple<size_t,size_t,size_t>> mem(m);
     size_t s = 100; // Reserved size for read name
+    size_t rseq_l = 100; // Reserved size for seq and qual
     char* rname = (char *)malloc(s * sizeof(char));
-    while (!feof(in_fd) and fread(&length, sizeof(size_t), 1, in_fd) > 0)
+    char *rseq = (char *)malloc(rseq_l * sizeof(char));
+    char *rqual = (char *)malloc(rseq_l * sizeof(char));
+    while (!feof(in_fd) and fread(&rname_l, sizeof(size_t), 1, in_fd) > 0)
     {
       // Reading read name
-      if (s < length)
+      if (s < rname_l)
       {
         // Resize lengths and pointers
-        s = length;
-        rname = (char *)realloc(rname, m * sizeof(char));
+        s = rname_l;
+        rname = (char *)realloc(rname, s * sizeof(char));
       }
 
-      if ((fread(rname, sizeof(char), length, in_fd)) != length)
+      if ((fread(rname, sizeof(char), rname_l, in_fd)) != rname_l)
         error("fread() file " + std::string(tmp_filename) + " failed");
-
-      // TODO: Store the fasta headers somewhere
-      f_mems << ">" + std::string(rname,length) << endl;
+      
+      // In case of SAM output read also the sequence and quals
+      if (args.sam_output)
+      {
+        if ((fread(&s_length, sizeof(size_t), 1, in_fd)) != 1)
+          error("fread() file " + std::string(tmp_filename) + " failed");
+        if (rseq_l < s_length)
+        {
+          // Resize s_lengths and pointers
+          rseq_l = s_length;
+          rseq = (char *)realloc(rseq, rseq_l * sizeof(char));
+          rqual = (char *)realloc(rqual, rseq_l * sizeof(char));
+        }
+        if ((fread(rseq, sizeof(char), s_length, in_fd)) != s_length)
+          error("fread() file " + std::string(tmp_filename) + " failed");
+        if ((fread(rqual, sizeof(char), s_length, in_fd)) != s_length)
+          error("fread() file " + std::string(tmp_filename) + " failed");
+      }
+      else 
+      {
+        f_mems << ">" + std::string(rname, rname_l) << endl;
+      }
 
       // Reading MEMs
       if ((fread(&length, sizeof(size_t), 1, in_fd)) != 1)
@@ -605,20 +653,38 @@ void dispatcher(Args &args)
 
       // TODO: Store the fasta headers somewhere
       // f_mems << ">" + std::to_string(n_seq) << endl;
-      if (args.extended_output){
+      if (args.sam_output){
         for (size_t i = 0; i < length; ++i)
         {
+          f_mems << std::string(rname,rname_l) + "\t";
+          // First MEM is primary, all other MEMs are non primary
+          f_mems << (i?"256\t":"0\t");
           std::pair<std::string, size_t> pos = idx.index(std::get<2>(mem[i]));
-          f_mems << "(" << std::get<0>(mem[i]) << "," << std::get<1>(mem[i]) << "," << pos.first << "," << pos.second << ") ";
+          f_mems << pos.first << "\t" << pos.second + 1<< "\t60\t";
+          cigar = "";
+          if (std::get<0>(mem[i]) > 0) cigar += std::string(std::get<0>(mem[i])) + "S";
+          cigar += std::string(std::get<1>(mem[i])) + "M";
+          size_t suff_length = s_length - (std::get<0>(mem[i]) + std::get<1>(mem[i]));
+          if (suff_length > 0) cigar += std::string(suff_length) + "S";
+          f_mems << cigar + "\t" + std::string(rseq, s_length) + "\t" + std::string(rqual, s_length) + "\n";
         }
-      } else {
-        for (size_t i = 0; i < length; ++i)
-        {
-          f_mems << "(" << std::get<0>(mem[i]) << "," << std::get<1>(mem[i]) << ") ";
-        }
+      } else 
+      {
+        if (args.extended_output){
+          for (size_t i = 0; i < length; ++i)
+          {
+            std::pair<std::string, size_t> pos = idx.index(std::get<2>(mem[i]));
+            f_mems << "(" << std::get<0>(mem[i]) << "," << std::get<1>(mem[i]) << "," << pos.first << "," << pos.second << ") ";
+          }
+        } else {
+          for (size_t i = 0; i < length; ++i)
+          {
+            f_mems << "(" << std::get<0>(mem[i]) << "," << std::get<1>(mem[i]) << ") ";
+          }
 
+        }
+        f_mems << endl;
       }
-      f_mems << endl;
 
       n_seq++;
     }
