@@ -459,7 +459,7 @@ void parseArgs(int argc, char *const argv[], Args &arg)
                     "         thread: [integer] - number of threads (def. 1)\n");
 
   std::string sarg;
-  while ((c = getopt(argc, argv, "l:hp:o:t:qe")) != -1)
+  while ((c = getopt(argc, argv, "l:hp:o:t:qes")) != -1)
   {
     switch (c)
     {
