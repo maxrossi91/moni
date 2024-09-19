@@ -11,7 +11,7 @@ Description = """
                 | |\/| | |  | | . ` | | |
                 | |  | | |__| | |\  |_| |_
                 |_|  |_|\____/|_| \_|_____|
-                                  ver 0.2.1
+                                  ver 0.2.2
 A Pangenomics Index for Finding MEMs.
 
 Build the index for highly repetive files using the approach
@@ -558,6 +558,8 @@ class run_helper(threading.Thread):
         command += f" -l {args.min_length}"
         if args.extended_output:
           command += " -e"
+        if args.sam_output:
+          command += " -s"
       if args.output != ".":
         command += " -o {}".format(args.output)
 
@@ -655,6 +657,7 @@ def main():
   mems_parser.add_argument('-p', '--pattern', help='the input query', type=str, required=True)
   mems_parser.add_argument('-o', '--output', help='output file prefix', type=str, default='.')
   mems_parser.add_argument('-e', '--extended-output', help='output MEM occurrence in the reference', action='store_true')
+  mems_parser.add_argument('-s', '--sam-output', help='output MEM in a SAM formatted file.', action='store_true')
   mems_parser.add_argument('-l', '--minimum-MEM-length', help='minimum MEM length', type=int, default=35, dest='min_length')
   mems_parser.add_argument('-t', '--threads', help='number of helper threads', default=1, type=int)
   mems_parser.add_argument('-g', '--grammar', help='select the grammar [plain, shaped]', type=str, default='plain')

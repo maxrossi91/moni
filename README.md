@@ -1,5 +1,5 @@
 [![Release](https://img.shields.io/github/release/maxrossi91/moni.svg)](https://github.com/maxrossi91/moni/releases)
-[![Downloads](https://img.shields.io/github/downloads/maxrossi91/moni/total?logo=github)](https://github.com/maxrossi91/moni/releases/download/v0.2.1/moni_0.2.1_amd64.deb)
+[![Downloads](https://img.shields.io/github/downloads/maxrossi91/moni/total?logo=github)](https://github.com/maxrossi91/moni/releases/download/v0.2.2/moni_0.2.2_amd64.deb)
 
 # MONI
 ```console
@@ -9,7 +9,7 @@
                           | |\/| | |  | | . ` | | |
                           | |  | | |__| | |\  |_| |_
                           |_|  |_|\____/|_| \_|_____|
-                                            ver 0.2.1
+                                            ver 0.2.2
 ```
 A Pangenomics Index for Finding MEMs.
 
@@ -57,7 +57,7 @@ usage: moni ms [-h] -i INDEX -p PATTERN [-o OUTPUT] [-t THREADS]
 
 ### Computing the matching statistics with MONI:
 ```
-usage: moni mems [-h] -i INDEX -p PATTERN [-o OUTPUT] [-e] [-t THREADS]
+usage: moni mems [-h] -i INDEX -p PATTERN [-o OUTPUT] [-e] [-s] [-t THREADS]
   -h, --help            show this help message and exit
   -i INDEX, --index INDEX
                         reference index base name (default: None)
@@ -67,6 +67,8 @@ usage: moni mems [-h] -i INDEX -p PATTERN [-o OUTPUT] [-e] [-t THREADS]
                         output directory path (default: .)
   -e, --extended-output
                         output MEM occurrence in the reference (default: False)
+  -s, --sam-output
+                        output MEM in a SAM formatted file. (default: False)
   -t THREADS, --threads THREADS
                         number of helper threads (default: 1)
   -g GRAMMAR, --grammar GRAMMAR

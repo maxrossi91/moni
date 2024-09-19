@@ -740,7 +740,7 @@ public:
     {
         std::string res = "@HD\tVN:1.6\tSO:unknown\n";
         res += idx.to_sam();
-        res += "@PG\tID:moni\tPN:moni\tVN:0.1.0\n";
+        res += "@PG\tID:moni\tPN:moni\tVN:0.2.2\n";
         return res; 
     }
 
