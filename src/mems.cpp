@@ -713,11 +713,17 @@ int main(int argc, char *const argv[])
 
   if (args.shaped_slp)
   {
-    dispatcher<mems_c<shaped_slp_t>>(args);
+    if (args.sam_output)
+      dispatcher<mems_c<shaped_slp_t,true>>(args);
+    else
+      dispatcher<mems_c<shaped_slp_t,false>>(args);
   }
   else
   {
-    dispatcher<mems_c<plain_slp_t>>(args);
+    if(args.sam_output)
+      dispatcher<mems_c<plain_slp_t,true>>(args);
+    else
+      dispatcher<mems_c<plain_slp_t,false>>(args);
   }
   return 0;
 }
