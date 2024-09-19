@@ -1,5 +1,5 @@
 [![Release](https://img.shields.io/github/release/maxrossi91/moni.svg)](https://github.com/maxrossi91/moni/releases)
-[![Downloads](https://img.shields.io/github/downloads/maxrossi91/moni/total?logo=github)](https://github.com/maxrossi91/moni/releases/download/v0.2.1/moni_0.2.1_amd64.deb)
+[![Downloads](https://img.shields.io/github/downloads/maxrossi91/moni/total?logo=github)](https://github.com/maxrossi91/moni/releases/download/v0.2.2/moni_0.2.2_amd64.deb)
 
 # MONI
 ```console
@@ -9,7 +9,7 @@
                           | |\/| | |  | | . ` | | |
                           | |  | | |__| | |\  |_| |_
                           |_|  |_|\____/|_| \_|_____|
-                                            ver 0.2.1
+                                            ver 0.2.2
 ```
 A Pangenomics Index for Finding MEMs.
 
