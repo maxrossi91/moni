@@ -664,10 +664,10 @@ void dispatcher(Args &args)
           f_mems << (i?"256\t":"0\t");
           f_mems << pos.first << "\t" << pos.second + 1<< "\t60\t";
           std::string cigar = "";
-          if (mem_pos > 0) cigar += std::string(mem_pos) + "S";
-          cigar += std::string(mem_len) + "M";
+          if (mem_pos > 0) cigar += std::to_string(mem_pos) + "S";
+          cigar += std::to_string(mem_len) + "M";
           size_t suff_length = s_length - (mem_pos + mem_len);
-          if (suff_length > 0) cigar += std::string(suff_length) + "S";
+          if (suff_length > 0) cigar += std::to_string(suff_length) + "S";
           f_mems << cigar + "\t" + std::string(rseq, s_length) + "\t" + std::string(rqual, s_length) + "\n";
         }
       } else 
