@@ -1,5 +1,8 @@
 [![Release](https://img.shields.io/github/release/maxrossi91/moni.svg)](https://github.com/maxrossi91/moni/releases)
 [![Downloads](https://img.shields.io/github/downloads/maxrossi91/moni/total?logo=github)](https://github.com/maxrossi91/moni/releases/download/v0.2.2/moni_0.2.2_amd64.deb)
+[![Docker Pulls](https://badgen.net/docker/pulls/maxrossi91/moni?icon=docker&label=pulls)](https://hub.docker.com/r/maxrossi91/moni/)
+[![Docker Image Size](https://badgen.net/docker/size/maxrossi91/moni?icon=docker&label=image%20size)](https://hub.docker.com/r/maxrossi91/moni/)
+
 
 # MONI
 ```console
@@ -15,6 +18,73 @@ A Pangenomics Index for Finding MEMs.
 
 MONI index uses the prefix-free parsing of the text [2][3] to build the Burrows-Wheeler Transform (BWT) of the reference genomes, the suffix array (SA) samples at the beginning and at the end of each run of the BWT, and the threshold positions of [1]. 
 
+## How to get MONI
+
+### Docker
+
+MONI is available on `docker`:
+
+```console
+docker pull maxrossi91/moni:v0.2.2
+docker run maxrossi91/moni:v0.2.2 moni -h
+```
+if using `singularity`:
+```console
+singularity pull moni_sif docker://maxrossi91/moni:v0.2.2
+./moni_sif moni --help
+```
+
+### Install Packages
+
+We provide MONI on a `.deb` package:
+```console
+wget https://github.com/maxrossi91/moni/releases/download/v0.2.2/moni_v0.2.2_amd64.deb
+sudo dpkg -i moni_v0.2.2_amd64.deb
+moni -h
+```
+We provide MONI on a linux `.sh` installer:
+```console
+wget https://github.com/maxrossi91/moni/releases/download/v0.2.2/moni_v0.2.2-Linux.sh
+chmod +x moni_v0.2.2-Linux.sh
+./moni_v0.2.2-Linux.sh
+moni -h
+```
+We provide MONI on a pre-compiled `.tar.gz`:
+```console
+wget https://github.com/maxrossi91/moni/releases/download/v0.2.2/moni_v0.2.2-Linux.tar.gz
+tar -xzvf moni_v0.2.2-Linux.tar.gz
+moni_v0.2.2-Linux/bin/moni -h
+```
+
+### Compile and install
+#### Install prerequisite packages
+
+```console
+apt-get update
+apt-get install -y build-essential cmake git python3 zlib1g-dev
+```
+
+#### Download
+
+```console
+git clone https://github.com/maxrossi91/moni
+```
+#### Compile
+
+```console
+co moni
+mkdir build
+cd build; cmake -DCMAKE_INSTALL_PREFIX=<path/to/install/prefix> ..
+make
+```
+
+Replace `<path/to/install/prefix>` with your preferred install path. If not specified the install path is `/usr/bin` by default.
+
+#### Install
+
+```console
+make install
+```
 
 ### Construction of the index:
 ```
@@ -103,36 +173,6 @@ optional arguments:
 ```
 
 # Example
-### Install prerequisite packages
-
-```console
-apt-get update
-apt-get install -y build-essential cmake git python3 zlib1g-dev
-```
-
-### Download
-
-```console
-git clone https://github.com/maxrossi91/moni
-```
-
-### Compile
-
-```console
-mkdir build
-cd build
-cmake ..
-make
-```
-### Install
-
-```console
-make install
-```
-
-This command will install the binaries to the default install location (e.g., `/usr/local/bin` for Ubuntu users). If the user wants the binary in some other custom location, this can be done using `cmake -DCMAKE_INSTALL_PERFIX=<dest> ..` instead of `cmake ..` in the compile sequence of commands, where `<dest>` is the preferred destination directory.
-
-### Run
 
 ##### Build the index for `SARS-CoV2.1k.fa.gz` in the `data/SARS-CoV2` folder
 ```console
