@@ -2,7 +2,7 @@
 [![Downloads](https://img.shields.io/github/downloads/maxrossi91/moni/total?logo=github)](https://github.com/maxrossi91/moni/releases/download/v0.2.2/moni_0.2.2_amd64.deb)
 [![Docker Pulls](https://badgen.net/docker/pulls/maxrossi91/moni?icon=docker&label=pulls)](https://hub.docker.com/r/maxrossi91/moni/)
 [![Docker Image Size](https://badgen.net/docker/size/maxrossi91/moni?icon=docker&label=image%20size)](https://hub.docker.com/r/maxrossi91/moni/)
-
+[![Bioconda](https://img.shields.io/badge/install%20with-bioconda-brightgreen.svg?style=flat)](http://bioconda.github.io/recipes/moni/README.html)
 
 # MONI
 ```console
